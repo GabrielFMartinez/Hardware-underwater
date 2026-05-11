@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# KiCad
+*.bak
+*.kicad_prl
+*.lck
+*-backups/
+.history/
+fp-info-cache
+
+# Microsoft Office temp files
+~$*
+
+# LTspice
+*.raw
+*.op.log

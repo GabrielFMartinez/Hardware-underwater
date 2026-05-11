@@ -1,0 +1,26 @@
+* /Users/gabrielmartinez/Documents/Github/Hardware-underwater/Draft2.asc
+XU1 V+2 V-2 VDD VSS Out2 FLG2 OPA55x
+XU2 V+1 V-1 VDD VSS Out1 FLG1 OPA551
+V1 VDD 0 24
+V2 0 VSS 24
+V3 N002 0 SINE(0 1 40k)
+R1 V-2 N002 2.49k
+C2 Out2 V-2 4.7p
+R2 Out2 V-2 68k
+R3 Out2 V-1 33k
+C3 Out1 V-1 10p
+R4 Out1 V-1 33k
+R5 V+1 0 15k
+V4 N001 0 0
+R6 V+2 N001 2.49k
+R7 Out1 V+2 68k
+C1 N001 0 100n
+RFLG1 FLG1 0 1Meg
+RFLG2 FLG2 0 1Meg
+.tran 10m
+.lib OPA55x.LIB
+.lib OPA551.LIB
+.options ITL4=500
+.backanno
+.end
+* Here what it is important to see is the V(Out1)-V(Out2)

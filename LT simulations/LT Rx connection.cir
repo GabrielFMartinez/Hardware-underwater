@@ -1,0 +1,77 @@
+* Piezo Sensor Switching Circuit
+* Q1, Q2 (MMBFJ108) in signal path, switched by Q3 (MMBFJ270)
+* EN = 0V  -> Q3 ON  -> NODE5 ~ GND -> Q1,Q2 ON  -> signal passes
+* EN = high-> Q3 OFF -> NODE5 = -24V -> Q1,Q2 OFF -> signal blocked
+
+*---------------- Parameter sweep for EN high level ----------------
+*.step param VEN list 3.3 5
+
+*---------------- Power supply ----------------
+Vneg  Nneg24  0   DC -24
+
+*---------------- Enable signal ----------------
+* PULSE(V1 V2 Tdelay Trise Tfall Ton Tperiod)
+* Start LOW (signal passes), then go HIGH (signal blocked), then back LOW
+VEN   EN  0   PULSE(0 3.3 1m 1u 1u 2m 4m)
+
+*---------------- Piezo sensor model (differential) ----------------
+* Ideal AC source of 500uVpp (250uV amplitude) split differentially
+* Series 1nF capacitor on each side represents the piezo source impedance
+Vpiezo PIEZO_P PIEZO_N SINE(0 250u 40k)
+Cp1   PIEZO_P  N1   1n
+Cp2   PIEZO_N  N2   1n
+
+*---------------- Bias resistors at piezo input ----------------
+RH1   N1   0    390k
+RH2   N2   0    390k
+
+*---------------- Q1: MMBFJ108 in signal path (top) ----------------
+* D=N3, S=N1, G via 1k to N5
+RG1   N5   G1   1k
+J1    N3   G1   N1   MMBFJ108
+
+*---------------- Q2: MMBFJ108 in signal path (bottom) ----------------
+* D=N4, S=N2, G via 1k to N5
+RG2   N5   G2   1k
+J2    N4   G2   N2   MMBFJ108
+
+*---------------- Pull-down resistor for NODE5 ----------------
+R1    N5   Nneg24   10k
+
+*---------------- Q3: MMBFJ270 control switch ----------------
+* D=N5, S=GND, G=EN
+J3    0   EN   N5    MMBFJ270
+
+*---------------- Load resistors at output (downstream amp input) ----------------
+RL1   N3   0   10Meg
+RL2   N4   0   10Meg
+
+*================ Device Models ================
+
+* MMBFJ270 - P-Channel JFET (manufacturer model from onsemi)
+.MODEL MMBFJ270 PJF
++ VTO=-4.50           BETA=8.9830e-4     LAMBDA=1.4511e-2
++ IS=2.1495e-11       ISR=2.1495e-11     ALPHA=1.00e-6
++ VK=1                RD=1               RS=1
++ CGD=6.5687e-12      CGS=5.9610e-12     M=0.3041
++ PB=1.2              KF=5.50e-16        AF=1.15
++ BETATCE=-0.42       VTOTC=-2.88e-3
+
+* MMBFJ108 - N-Channel JFET (derived from datasheet, typical values)
+* VTO   : midpoint of VGS(off) range -3V to -10V
+* BETA  : IDSS / VTO^2 = 80mA / 25V^2 = 3.2 mA/V^2
+* RD,RS : split RDS(on)=8 ohm symmetrically (4+4)
+* CGS,CGD: from on-state capacitance ~85pF
+* LAMBDA: typical placeholder for channel-length modulation
+.MODEL MMBFJ108 NJF
++ VTO=-5.0            BETA=3.2e-3        LAMBDA=1.0e-2
++ IS=1e-14            RD=4               RS=4
++ CGD=85e-12          CGS=85e-12         PB=1.0
++ FC=0.5              KF=0               AF=1
+
+*---------------- Analysis ----------------
+* Need fine timestep to resolve 40kHz signal (period = 25us)
+.tran 1u 5m 0 0.5u uic
+
+.end
+* Where what it is important to check is Ven, which is the control signal, V(n5), which is the signal that gets into the gate of the 108s and V(n3)-V(n4) which is what the preamplifier will see
